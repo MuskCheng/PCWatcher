@@ -36,7 +36,7 @@ class PushMeClient:
     
     def send_status(self, cpu, mem, disks, net, device_info):
         device_display = self._get_device_display(device_info)
-        title = f"{device_display} PCWatcher 系统状态"
+        title = f"[i][#PCWatcher!📊]{device_display} 系统状态"
         
         content = f"## 📊 系统状态 - {device_display}\n\n"
         
@@ -62,7 +62,7 @@ class PushMeClient:
     
     def send_alert(self, alerts, device_info):
         device_display = self._get_device_display(device_info)
-        title = f"{device_display} PCWatcher 告警通知"
+        title = f"[w][#PCWatcher!⚠️]{device_display} 告警通知"
         
         content = f"## ⚠️ 监控告警 - {device_display}\n\n"
         
@@ -77,7 +77,7 @@ class PushMeClient:
     def test_connection(self, device_info=None):
         device_info = device_info or {}
         device_display = self._get_device_display(device_info)
-        title = f"{device_display} PCWatcher 连接测试"
+        title = f"[s][#PCWatcher!✅]{device_display} 连接测试"
         content = "## ✅ 连接成功\n\n"
         content += "| 项目 | 状态 |\n"
         content += "|------|------|\n"

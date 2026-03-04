@@ -6,7 +6,7 @@ a = Analysis(
     ['pcwatcher.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('VERSION', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
