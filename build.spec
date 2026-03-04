@@ -1,4 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
+import os
+
+# 读取版本号
+version_file = os.path.join(os.path.dirname(os.path.abspath(SPEC)), 'VERSION')
+if os.path.exists(version_file):
+    with open(version_file, 'r', encoding='utf-8') as f:
+        version = f.read().strip()
+else:
+    version = '1.5'
 
 block_cipher = None
 
@@ -27,7 +36,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='PCWatcher',
+    name=f'PCWatcher_V{version}',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

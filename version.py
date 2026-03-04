@@ -12,7 +12,7 @@ def get_version():
     if os.path.exists(version_file):
         with open(version_file, 'r', encoding='utf-8') as f:
             return f.read().strip()
-    return '1.0.0'
+    return '1.5'
 
 def get_changelog():
     base_path = get_base_path()
