@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from version import __version__
+from version import __version__, __changelog__
 import psutil
 
 
@@ -139,6 +139,33 @@ class ConfigWindow:
         btn_frame.grid(row=row, column=0, columnspan=3, pady=20)
         ttk.Button(btn_frame, text="保存", command=self._save_config).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="取消", command=self.window.destroy).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="关于", command=self._show_about).pack(side=tk.LEFT, padx=5)
+    
+    def _show_about(self):
+        about_window = tk.Toplevel(self.window)
+        about_window.title(f"关于 PCWatcher")
+        about_window.geometry("450x400")
+        about_window.resizable(False, False)
+        
+        header = tk.Frame(about_window, bg='#1E88E5', height=60)
+        header.pack(fill=tk.X)
+        header.pack_propagate(False)
+        tk.Label(header, text=f"PCWatcher v{__version__}", font=('Microsoft YaHei', 14, 'bold'), bg='#1E88E5', fg='white').pack(pady=15)
+        
+        text_frame = tk.Frame(about_window)
+        text_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        scrollbar = tk.Scrollbar(text_frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        text = tk.Text(text_frame, wrap=tk.WORD, font=('Microsoft YaHei', 9), yscrollcommand=scrollbar.set)
+        text.pack(fill=tk.BOTH, expand=True)
+        scrollbar.config(command=text.yview)
+        
+        text.insert(tk.END, __changelog__)
+        text.config(state=tk.DISABLED)
+        
+        tk.Button(about_window, text="关闭", command=about_window.destroy, padx=20).pack(pady=10)
     
     def _load_config(self):
         cfg = self.config_manager.config
