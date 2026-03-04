@@ -11,15 +11,37 @@ class ConfigWindow:
         self.window = None
         self.network_combo = None
         self._pending_interfaces = None
+        self.disk_vars = {}
+        self.disks = []
+    
+    def _get_disks(self):
+        disks = []
+        for partition in psutil.disk_partitions():
+            try:
+                usage = psutil.disk_usage(partition.mountpoint)
+                disks.append({
+                    "device": partition.device,
+                    "mountpoint": partition.mountpoint,
+                    "used": round(usage.used / (1024**3), 2),
+                    "total": round(usage.total / (1024**3), 2),
+                    "percent": usage.percent
+                })
+            except:
+                pass
+        return disks
     
     def show(self):
         if self.window and self.window.winfo_exists():
             self.window.lift()
             return
         
+        self.disks = self._get_disks()
+        
+        window_height = 550 + len(self.disks) * 30
+        
         self.window = tk.Toplevel()
         self.window.title(f"PCWatcher 配置 v{__version__}")
-        self.window.geometry("500x550")
+        self.window.geometry(f"500x{window_height}")
         self.window.resizable(False, False)
         
         self._create_widgets()
@@ -50,9 +72,25 @@ class ConfigWindow:
         ttk.Entry(main_frame, textvariable=self.memory_threshold_var, width=15).grid(row=row, column=1, sticky=tk.W, pady=5)
         
         row += 1
-        ttk.Label(main_frame, text="磁盘使用率阈值 (%):").grid(row=row, column=0, sticky=tk.W, pady=5)
-        self.disk_threshold_var = tk.IntVar(value=90)
-        ttk.Entry(main_frame, textvariable=self.disk_threshold_var, width=15).grid(row=row, column=1, sticky=tk.W, pady=5)
+        ttk.Separator(main_frame, orient='horizontal').grid(row=row, column=0, columnspan=3, sticky='ew', pady=10)
+        
+        row += 1
+        ttk.Label(main_frame, text="磁盘阈值设置", font=('Microsoft YaHei', 10, 'bold')).grid(row=row, column=0, columnspan=3, sticky=tk.W, pady=5)
+        
+        row += 1
+        for disk in self.disks:
+            mountpoint = disk["mountpoint"]
+            label = ttk.Label(main_frame, text=f"磁盘 {mountpoint} (%):")
+            label.grid(row=row, column=0, sticky=tk.W, pady=3)
+            
+            var = tk.IntVar(value=90)
+            self.disk_vars[mountpoint] = var
+            ttk.Entry(main_frame, textvariable=var, width=15).grid(row=row, column=1, sticky=tk.W, pady=3)
+            row += 1
+        
+        if not self.disks:
+            ttk.Label(main_frame, text="未检测到磁盘", foreground='gray').grid(row=row, column=0, columnspan=3, sticky=tk.W, pady=5)
+            row += 1
         
         row += 1
         ttk.Separator(main_frame, orient='horizontal').grid(row=row, column=0, columnspan=3, sticky='ew', pady=10)
@@ -92,11 +130,14 @@ class ConfigWindow:
         self.push_key_var.set(cfg.get("push_key", ""))
         self.cpu_threshold_var.set(cfg.get("cpu_threshold", 80))
         self.memory_threshold_var.set(cfg.get("memory_threshold", 85))
-        self.disk_threshold_var.set(cfg.get("disk_threshold", 90))
         self.network_interface_var.set(cfg.get("network_interface", ""))
         self.upload_threshold_var.set(cfg.get("network_upload_threshold", 10485760) // 1048576)
         self.download_threshold_var.set(cfg.get("network_download_threshold", 10485760) // 1048576)
         self.interval_var.set(cfg.get("interval", 30))
+        
+        disk_thresholds = cfg.get("disk_thresholds", {})
+        for mountpoint, var in self.disk_vars.items():
+            var.set(disk_thresholds.get(mountpoint, 90))
     
     def _test_pushme(self):
         from notifier import PushMeClient
@@ -117,7 +158,12 @@ class ConfigWindow:
         cfg["push_key"] = self.push_key_var.get()
         cfg["cpu_threshold"] = self.cpu_threshold_var.get()
         cfg["memory_threshold"] = self.memory_threshold_var.get()
-        cfg["disk_threshold"] = self.disk_threshold_var.get()
+        
+        disk_thresholds = {}
+        for mountpoint, var in self.disk_vars.items():
+            disk_thresholds[mountpoint] = var.get()
+        cfg["disk_thresholds"] = disk_thresholds
+        
         cfg["network_interface"] = self.network_interface_var.get()
         cfg["network_upload_threshold"] = self.upload_threshold_var.get() * 1048576
         cfg["network_download_threshold"] = self.download_threshold_var.get() * 1048576

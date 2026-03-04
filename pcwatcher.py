@@ -73,10 +73,9 @@ class PCWatcher:
         
         disks = self.monitor.get_disks()
         disk_thresholds = cfg.get("disk_thresholds", {})
-        default_disk_threshold = cfg.get("disk_threshold", 90)
         for disk in disks:
             mountpoint = disk["mountpoint"]
-            threshold = disk_thresholds.get(mountpoint, default_disk_threshold)
+            threshold = disk_thresholds.get(mountpoint, 90)
             if disk["percent"] > threshold:
                 alerts.append(f"磁盘 {mountpoint}: {disk['percent']:.1f}% (阈值: {threshold}%)")
                 status = "red"
