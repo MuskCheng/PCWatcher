@@ -1,0 +1,58 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号 (例如: 1.0.1)'
+        required: false
+        type: string
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Read version
+        id: version
+        run: |
+          $version = "${{ github.event.inputs.version }}"
+          if (-not $version) {
+            $version = Get-Content VERSION
+          }
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Build executable
+        run: pyinstaller build.spec
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: PCWatcher v${{ steps.version.outputs.version }}
+          draft: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          files: dist/PCWatcher.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
