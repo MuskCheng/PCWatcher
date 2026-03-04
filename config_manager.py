@@ -15,6 +15,7 @@ class ConfigManager:
     def _load(self):
         default_config = {
             "push_key": "",
+            "device_name": "",
             "cpu_threshold": 80,
             "memory_threshold": 85,
             "disk_thresholds": {},

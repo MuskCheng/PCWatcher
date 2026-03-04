@@ -1,5 +1,8 @@
 import psutil
 import time
+import socket
+import platform
+import winreg
 
 class SystemMonitor:
     def __init__(self):
@@ -68,3 +71,31 @@ class SystemMonitor:
     
     def get_network_interfaces(self):
         return list(psutil.net_if_addrs().keys())
+    
+    def get_device_info(self):
+        hostname = socket.gethostname()
+        
+        device_model = ""
+        try:
+            if platform.system() == "Windows":
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DESCRIPTION\System\BIOS")
+                try:
+                    system_name = winreg.QueryValueEx(key, "SystemProductName")
+                    if system_name and system_name[0]:
+                        device_model = system_name[0]
+                except:
+                    pass
+                try:
+                    manufacturer = winreg.QueryValueEx(key, "SystemManufacturer")
+                    if manufacturer and manufacturer[0] and manufacturer[0] != "System manufacturer":
+                        device_model = f"{manufacturer[0]} {device_model}".strip()
+                except:
+                    pass
+                winreg.CloseKey(key)
+        except:
+            pass
+        
+        return {
+            "hostname": hostname,
+            "device_model": device_model
+        }

@@ -25,10 +25,20 @@ class PushMeClient:
         except Exception as e:
             return False, str(e)
     
-    def send_status(self, cpu, mem, disks, net):
-        title = "[#PCWatcher!监控]系统状态"
+    def _get_device_display(self, device_info):
+        device_name = device_info.get("device_name", "")
+        hostname = device_info.get("hostname", "")
         
-        content = "## 📊 系统状态\n\n"
+        if device_name:
+            return f"({device_name}) [{hostname}]"
+        else:
+            return f"[{hostname}]"
+    
+    def send_status(self, cpu, mem, disks, net, device_info):
+        device_display = self._get_device_display(device_info)
+        title = f"{device_display} PCWatcher 系统状态"
+        
+        content = f"## 📊 系统状态 - {device_display}\n\n"
         
         content += "| 项目 | 数值 |\n"
         content += "|------|------|\n"
@@ -50,10 +60,11 @@ class PushMeClient:
         
         return self.send(title, content)
     
-    def send_alert(self, alerts):
-        title = "[w][#PCWatcher!警告]告警通知"
+    def send_alert(self, alerts, device_info):
+        device_display = self._get_device_display(device_info)
+        title = f"{device_display} PCWatcher 告警通知"
         
-        content = "## ⚠️ 监控告警\n\n"
+        content = f"## ⚠️ 监控告警 - {device_display}\n\n"
         
         content += "| 项目 | 状态 |\n"
         content += "|------|------|\n"
@@ -63,8 +74,10 @@ class PushMeClient:
         
         return self.send(title, content)
     
-    def test_connection(self):
-        title = "[s][#PCWatcher!成功]连接测试"
+    def test_connection(self, device_info=None):
+        device_info = device_info or {}
+        device_display = self._get_device_display(device_info)
+        title = f"{device_display} PCWatcher 连接测试"
         content = "## ✅ 连接成功\n\n"
         content += "| 项目 | 状态 |\n"
         content += "|------|------|\n"

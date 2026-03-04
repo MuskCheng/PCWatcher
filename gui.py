@@ -5,9 +5,10 @@ import psutil
 
 
 class ConfigWindow:
-    def __init__(self, config_manager, on_save=None):
+    def __init__(self, config_manager, on_save=None, device_info=None):
         self.config_manager = config_manager
         self.on_save = on_save
+        self.device_info = device_info or {}
         self.window = None
         self.network_combo = None
         self._pending_interfaces = None
@@ -37,11 +38,11 @@ class ConfigWindow:
         
         self.disks = self._get_disks()
         
-        window_height = 550 + len(self.disks) * 30
+        window_height = 590 + len(self.disks) * 30
         
         self.window = tk.Toplevel()
         self.window.title(f"PCWatcher 配置 v{__version__}")
-        self.window.geometry(f"500x{window_height}")
+        self.window.geometry(f"550x{window_height}")
         self.window.resizable(False, False)
         
         self._create_widgets()
@@ -54,12 +55,26 @@ class ConfigWindow:
         main_frame = ttk.Frame(self.window, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
+        main_frame.columnconfigure(1, weight=1)
+        
         row = 0
         
+        ttk.Label(main_frame, text="设备备注名:").grid(row=row, column=0, sticky=tk.W, pady=5)
+        self.device_name_var = tk.StringVar()
+        ttk.Entry(main_frame, textvariable=self.device_name_var, width=38).grid(row=row, column=1, pady=5, sticky=tk.EW)
+        
+        row += 1
+        ttk.Label(main_frame, text="设备型号:").grid(row=row, column=0, sticky=tk.W, pady=5)
+        device_model_text = self.device_info.get("device_model", "")
+        if not device_model_text:
+            device_model_text = self.device_info.get("hostname", "未知设备")
+        ttk.Label(main_frame, text=device_model_text, foreground='gray', anchor='w').grid(row=row, column=1, sticky=tk.EW, pady=5)
+        
+        row += 1
         ttk.Label(main_frame, text="PushMe Key:").grid(row=row, column=0, sticky=tk.W, pady=5)
         self.push_key_var = tk.StringVar()
-        ttk.Entry(main_frame, textvariable=self.push_key_var, width=40).grid(row=row, column=1, pady=5)
-        ttk.Button(main_frame, text="测试", command=self._test_pushme).grid(row=row, column=2, padx=5)
+        ttk.Entry(main_frame, textvariable=self.push_key_var, width=38).grid(row=row, column=1, pady=5, sticky=tk.EW)
+        ttk.Button(main_frame, text="测试", command=self._test_pushme, width=6).grid(row=row, column=2, padx=(5, 0))
         
         row += 1
         ttk.Label(main_frame, text="CPU 使用率阈值 (%):").grid(row=row, column=0, sticky=tk.W, pady=5)
@@ -128,6 +143,7 @@ class ConfigWindow:
     def _load_config(self):
         cfg = self.config_manager.config
         self.push_key_var.set(cfg.get("push_key", ""))
+        self.device_name_var.set(cfg.get("device_name", ""))
         self.cpu_threshold_var.set(cfg.get("cpu_threshold", 80))
         self.memory_threshold_var.set(cfg.get("memory_threshold", 85))
         self.network_interface_var.set(cfg.get("network_interface", ""))
@@ -146,8 +162,12 @@ class ConfigWindow:
             messagebox.showwarning("警告", "请输入 PushMe Key")
             return
         
+        device_name = self.device_name_var.get()
+        test_device_info = self.device_info.copy()
+        test_device_info["device_name"] = device_name
+        
         client = PushMeClient(key)
-        success, msg = client.test_connection()
+        success, msg = client.test_connection(test_device_info)
         if success:
             messagebox.showinfo("成功", "连接测试成功！")
         else:
@@ -156,6 +176,7 @@ class ConfigWindow:
     def _save_config(self):
         cfg = self.config_manager.config
         cfg["push_key"] = self.push_key_var.get()
+        cfg["device_name"] = self.device_name_var.get()
         cfg["cpu_threshold"] = self.cpu_threshold_var.get()
         cfg["memory_threshold"] = self.memory_threshold_var.get()
         

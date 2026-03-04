@@ -16,6 +16,8 @@ class PCWatcher:
     def __init__(self):
         self.config_manager = ConfigManager()
         self.monitor = SystemMonitor()
+        self.device_info = self.monitor.get_device_info()
+        self.device_info["device_name"] = self.config_manager.config.get("device_name", "")
         self.tray = None
         self.running = False
         self.monitor_thread = None
@@ -114,7 +116,7 @@ class PCWatcher:
         self.last_alerts[alert_key] = now
         
         client = PushMeClient(push_key)
-        client.send_alert(alerts)
+        client.send_alert(alerts, self.device_info)
     
     def push_now(self):
         cfg = self.config_manager.config
@@ -128,8 +130,10 @@ class PCWatcher:
         iface = cfg.get("network_interface")
         net = self.monitor.get_network_info(iface) if iface else None
         
+        self.device_info["device_name"] = cfg.get("device_name", "")
+        
         client = PushMeClient(push_key)
-        client.send_status(cpu, mem, disks, net)
+        client.send_status(cpu, mem, disks, net, self.device_info)
     
     def show_status(self):
         if self.status_window and self.status_window.winfo_exists():
@@ -244,7 +248,10 @@ class PCWatcher:
         tk.Label(text_frame, text=value, font=('Microsoft YaHei', 11, 'bold'), bg='white', fg=color).pack(anchor=tk.W)
     
     def show_config(self):
-        win = ConfigWindow(self.config_manager, on_save=self._on_config_save)
+        cfg = self.config_manager.config
+        self.device_info["device_name"] = cfg.get("device_name", "")
+        
+        win = ConfigWindow(self.config_manager, on_save=self._on_config_save, device_info=self.device_info)
         interfaces = self.monitor.get_network_interfaces()
         win.set_network_interfaces(interfaces)
         win.show()
