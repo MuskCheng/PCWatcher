@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from version import __version__
+import psutil
+
 
 class ConfigWindow:
     def __init__(self, config_manager, on_save=None):
@@ -48,6 +50,11 @@ class ConfigWindow:
         ttk.Entry(main_frame, textvariable=self.memory_threshold_var, width=15).grid(row=row, column=1, sticky=tk.W, pady=5)
         
         row += 1
+        ttk.Label(main_frame, text="磁盘使用率阈值 (%):").grid(row=row, column=0, sticky=tk.W, pady=5)
+        self.disk_threshold_var = tk.IntVar(value=90)
+        ttk.Entry(main_frame, textvariable=self.disk_threshold_var, width=15).grid(row=row, column=1, sticky=tk.W, pady=5)
+        
+        row += 1
         ttk.Separator(main_frame, orient='horizontal').grid(row=row, column=0, columnspan=3, sticky='ew', pady=10)
         
         row += 1
@@ -85,6 +92,7 @@ class ConfigWindow:
         self.push_key_var.set(cfg.get("push_key", ""))
         self.cpu_threshold_var.set(cfg.get("cpu_threshold", 80))
         self.memory_threshold_var.set(cfg.get("memory_threshold", 85))
+        self.disk_threshold_var.set(cfg.get("disk_threshold", 90))
         self.network_interface_var.set(cfg.get("network_interface", ""))
         self.upload_threshold_var.set(cfg.get("network_upload_threshold", 10485760) // 1048576)
         self.download_threshold_var.set(cfg.get("network_download_threshold", 10485760) // 1048576)
@@ -109,6 +117,7 @@ class ConfigWindow:
         cfg["push_key"] = self.push_key_var.get()
         cfg["cpu_threshold"] = self.cpu_threshold_var.get()
         cfg["memory_threshold"] = self.memory_threshold_var.get()
+        cfg["disk_threshold"] = self.disk_threshold_var.get()
         cfg["network_interface"] = self.network_interface_var.get()
         cfg["network_upload_threshold"] = self.upload_threshold_var.get() * 1048576
         cfg["network_download_threshold"] = self.download_threshold_var.get() * 1048576

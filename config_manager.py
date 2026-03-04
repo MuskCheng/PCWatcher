@@ -17,6 +17,7 @@ class ConfigManager:
             "push_key": "",
             "cpu_threshold": 80,
             "memory_threshold": 85,
+            "disk_threshold": 90,
             "disk_thresholds": {},
             "network_interface": "",
             "network_upload_threshold": 10485760,
