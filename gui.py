@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from version import __version__
 
 class ConfigWindow:
     def __init__(self, config_manager, on_save=None):
@@ -15,7 +16,7 @@ class ConfigWindow:
             return
         
         self.window = tk.Toplevel()
-        self.window.title("PCWatcher 配置")
+        self.window.title(f"PCWatcher 配置 v{__version__}")
         self.window.geometry("500x550")
         self.window.resizable(False, False)
         

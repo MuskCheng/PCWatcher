@@ -7,6 +7,11 @@ on:
         description: '版本号 (例如: 1.0.1)'
         required: false
         type: string
+  push:
+    paths:
+      - 'VERSION'
+    branches:
+      - master
 
 jobs:
   build:
